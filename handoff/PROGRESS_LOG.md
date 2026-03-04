@@ -116,3 +116,48 @@
 
 **Next**：
 - Step-002：项目骨架一键启动（M0基建）
+
+---
+
+## [2026-03-04] STEP-001A：PlanGate 工作流落地（Plan → Review → Execute）
+**Owner**：Antigravity
+**Goal（可��收）**：
+- A) CI 失败：代码变更但没有 plan 文件
+- B) PR 模板包含 plan 文档路径 + checkbox
+- C) Plan 模板创建
+
+**Done**：
+- ✅ 修改 `.github/workflows/require-handoff-progress.yml`：增加 plan 文件检查
+  - 正则：`^docs/todo/.*(Step|step)-.*Plan.*\.md$`
+- ✅ 修改 `.github/pull_request_template.md`：增加 plan 路径 + checkbox
+- ✅ 创建 `docs/todo/PLAN_TEMPLATE.md`：方案文档模板
+- ✅ 更新 `docs/CLAUDE.md`：添加 Plan → Review → Execute 协议
+- ✅ 更新 `docs/HANDOFF.md`：添加 PlanGate 能力说明
+
+**Files Changed**：
+- .github/workflows/require-handoff-progress.yml
+- .github/pull_request_template.md
+- docs/todo/PLAN_TEMPLATE.md
+- docs/todo/2026-03-04-Step-001A-PlanGate-Plan.md
+- docs/CLAUDE.md
+- docs/HANDOFF.md
+- docs/PROGRESS_LOG.md
+
+**Commands / Tests**：
+```bash
+# 验证 CI 正则
+echo "docs/todo/2026-03-04-Step-001A-PlanGate-Plan.md" | grep -cE '^docs/todo/.*(Step|step)-.*Plan.*\.md$'
+# → 1 (匹配)
+```
+
+**Result（可演示点）**：
+- 代码变更必须伴随 `docs/todo/*Step*-*.Plan*.md` 文件
+- CI 自动检查 plan 文件存在
+- PR 模板要求填写 plan 文档路径
+
+**Known Issues / Risks**：
+- 小型修复（typo、文档）也需要 plan 文件，可能过于严格
+- 可考虑后续增加 `docs-only` 标签跳过 plan 检查
+
+**Next**：
+- Step-003：SMB 扫描支持

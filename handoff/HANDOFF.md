@@ -1,7 +1,7 @@
 # Handoff（当前状态）
 
 ## 当前可演示能力
-- ✅    键启动全栈：`docker compose up -d` (postgres, redis, api, worker, web)
+- ✅ 一键启动全栈：`docker compose up -d` (postgres, redis, api, worker, web)
 - ✅ API健康检查：`GET /health` 返回 `{"status":"ok","version":"0.1.0"}`
 - ✅ 端点管理：创建/列出本地存储端点
 - ✅ 扫描任务：提交扫描 → Worker检测数据集 → 结果存入DB
@@ -9,10 +9,7 @@
 - ✅ Web UI：端点管理、任务大厅、数据集列表（含筛选）
 - ✅ 示例数据：sample_data/ 包含4种测试数据集
 - ✅ 公共仓库发布：scripts/publish_handoff.ps1 脱敏发布文档
-- ✅ publish_handoff.ps1 已修复：不再因 git 输出误报失败；.claude/ 已加入 .gitignore  
-- ✅ publish_handoff.ps1 已兼容 PowerShell 7：不再将 git stderr 正常输出误报为错误
-- ✅ publish_handoff.ps1：git push 使用 Start-Process，避免 PowerShell 7 将 stderr 误报为错误
-- ✅ publish_handoff.ps1 语法已修复（try/finally 配对），脚本可正常运行
+- ✅ PlanGate 工作流：CI 强制要求 Plan → Review → Execute（代码变更必须伴随方案文档）
 
 ## 当前阻塞/风险
 - 无重大阻塞
