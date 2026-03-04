@@ -59,6 +59,17 @@
 **Next**：
 - Step-001A：PlanGate（Plan → Review → Execute）门禁落地
 
+## [2026-03-04] HOTFIX: publish_handoff.ps1 兼容 PowerShell 7 stderr 误报
+
+**Owner**：Claude Code
+**Done**：
+- ✅ 禁用 PS7 的 native stderr → error record 映射，避免 git push 误报失败
+**Files Changed**：
+- scripts/publish_handoff.ps1
+**Next**：
+- Step-001A：PlanGate 落地
+
+
 **Files Changed**：
 - scripts/publish_handoff.ps1（新增）
 - docs/CLAUDE.md
