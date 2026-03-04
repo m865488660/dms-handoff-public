@@ -11,6 +11,7 @@
 - ✅ 公共仓库发布：scripts/publish_handoff.ps1 脱敏发布文档
 - ✅ publish_handoff.ps1 已修复：不再因 git 输出误报失败；.claude/ 已加入 .gitignore  
 - ✅ publish_handoff.ps1 已兼容 PowerShell 7：不再将 git stderr 正常输出误报为错误
+- ✅ publish_handoff.ps1：git push 使用 Start-Process，避免 PowerShell 7 将 stderr 误报为错误
 
 ## 当前阻塞/风险
 - 无重大阻塞

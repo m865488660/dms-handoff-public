@@ -69,6 +69,16 @@
 **Next**：
 - Step-001A：PlanGate 落地
 
+## [2026-03-04] HOTFIX: publish_handoff.ps1 使用 Start-Process 执行 git push（避免 PS7 NativeCommandError）
+
+**Owner**：Claude Code
+**Done**：
+- ✅ git push 改为 Start-Process + ExitCode 判定，避免 PS7 将 stderr 当异常
+**Files Changed**：
+- scripts/publish_handoff.ps1
+**Next**：
+- Step-001A：PlanGate 落地
+
 
 **Files Changed**：
 - scripts/publish_handoff.ps1（新增）
