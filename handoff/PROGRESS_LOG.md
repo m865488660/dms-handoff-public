@@ -42,6 +42,23 @@
 - ✅ 更新 `docs/CLAUDE.md`：添加 Public Handoff Publishing 协议
 - ✅ 更新 `CONTRIBUTING.md`：添加发布流程和脱敏要求
 
+## [2026-03-04] HOTFIX：publish_handoff.ps1 兼容 git stderr / no-op commit + 忽略 .claude/
+
+**Owner**：Antigravity / Claude Code
+**Goal**：publish 脚本不因 git 输出误报失败；忽略 .claude/ 防止污染工作区
+**Done**：
+- ✅ publish_handoff.ps1：允许 “nothing to commit”，并捕获 push 输出
+- ✅ .gitignore：忽略 .claude/
+**Files Changed**：
+- scripts/publish_handoff.ps1
+- .gitignore
+**Commands / Tests**：
+- .\scripts\publish_handoff.ps1 -PublicRepoDir C:\dms-handoff-public -StepId "Step-TEST" -Message "plan"
+**Result**：
+- 无变更时显示 “No changes to commit.” 仍能正常结束
+**Next**：
+- Step-001A：PlanGate（Plan → Review → Execute）门禁落地
+
 **Files Changed**：
 - scripts/publish_handoff.ps1（新增）
 - docs/CLAUDE.md

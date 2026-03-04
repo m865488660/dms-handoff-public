@@ -9,6 +9,7 @@
 - ✅ Web UI：端点管理、任务大厅、数据集列表（含筛选）
 - ✅ 示例数据：sample_data/ 包含4种测试数据集
 - ✅ 公共仓库发布：scripts/publish_handoff.ps1 脱敏发布文档
+- ✅ publish_handoff.ps1 已修复：不再因 git 输出误报失败；.claude/ 已加入 .gitignore  
 
 ## 当前阻塞/风险
 - 无重大阻塞
