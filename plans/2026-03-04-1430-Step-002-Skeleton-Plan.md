@@ -33,78 +33,50 @@
 ## B) File Tree to Create
 
 ```
-dms-handoff-public/
+datama/                              # Private repo at C:\datama
 ├── docker-compose.yml
 ├── .env.example
 ├── .dockerignore
 ├── .gitignore (update)
+├── README.md
 │
-├── backend/
+├── api/                             # FastAPI backend
 │   ├── Dockerfile
 │   ├── requirements.txt
-│   ├── pyproject.toml
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py                    # FastAPI app entry point
-│   │   ├── config.py                  # Settings via pydantic-settings
-│   │   ├── database.py                # SQLAlchemy async engine
-│   │   ├── models/
-│   │   │   ├── __init__.py
-│   │   │   ├── endpoint.py
-│   │   │   ├── scan_task.py
-│   │   │   └── dataset.py
-│   │   ├── schemas/
-│   │   │   ├── __init__.py
-│   │   │   ├── endpoint.py
-│   │   │   ├── scan_task.py
-│   │   │   └── dataset.py
-│   │   ├── routers/
-│   │   │   ├── __init__.py
-│   │   │   ├── health.py
-│   │   │   ├── endpoints.py
-│   │   │   ├── tasks.py
-│   │   │   └── datasets.py
-│   │   ├── services/
-│   │   │   ├── __init__.py
-│   │   │   ├── scanner.py             # Dataset detection logic
-│   │   │   └── task_runner.py         # RQ task implementation
-│   │   └── utils/
-│   │       ├── __init__.py
-│   │       └── file_utils.py          # Read-only file operations
-│   └── alembic/
-│       ├── alembic.ini
-│       ├── env.py
-│       └── versions/
-│           └── 001_initial.py
+│   ├── init_db.sql                  # Simple init SQL (no Alembic for v0.1)
+│   ├── main.py                      # FastAPI app entry point
+│   ├── database.py                  # asyncpg connection pool
+│   ├── models.py                    # Pydantic schemas
+│   └── routes/
+│       ├── __init__.py
+│       ├── endpoints.py
+│       ├── tasks.py
+│       └── datasets.py
 │
-├── worker/
+├── worker/                          # RQ worker
 │   ├── Dockerfile
-│   ├── requirements.txt               # Same as backend + rq
-│   └── worker.py                      # RQ worker entry point
+│   ├── requirements.txt
+│   ├── worker.py                    # RQ worker entry point
+│   └── scan.py                      # Scan logic + dataset classification
 │
-├── web/
+├── web/                             # Next.js frontend
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── next.config.js
-│   ├── tsconfig.json
 │   ├── app/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx                   # Redirect to /endpoints
+│   │   ├── layout.js
+│   │   ├── page.js                  # Home page
+│   │   ├── globals.css
 │   │   ├── endpoints/
-│   │   │   └── page.tsx
+│   │   │   └── page.js
 │   │   ├── tasks/
-│   │   │   └── page.tsx
+│   │   │   └── page.js
 │   │   └── datasets/
-│   │       └── page.tsx
-│   ├── components/
-│   │   ├── Layout.tsx
-│   │   ├── EndpointForm.tsx
-│   │   ├── TaskForm.tsx
-│   │   └── DatasetList.tsx
+│   │       └── page.js
 │   └── lib/
-│       └── api.ts                     # API client
+│       └── api.js                   # API client
 │
-├── sample_data/
+├── sample_data/                     # Test fixtures (mounted to /data)
 │   ├── raw_dataset/
 │   │   ├── info/
 │   │   │   └── device_info.json
@@ -118,11 +90,14 @@ dms-handoff-public/
 │   │   │   └── device_info.json
 │   │   ├── metadata.yaml
 │   │   └── transforms.json
-│   └── with_gcp_dataset/
+│   └── gcp_dataset/
 │       ├── info/
 │       │   └── device_info.json
 │       ├── metadata.yaml
 │       └── ctrl_points.csv
+│
+├── configs/
+│   └── settings.yaml
 │
 └── docs/
     └── todo/
@@ -131,52 +106,61 @@ dms-handoff-public/
 
 ---
 
-## C) DB Schema + Migration Approach
+## C) DB Schema (Simplified for v0.1)
 
-### Tables
+### Tables (via init_db.sql)
 
 #### `endpoints`
 | Column       | Type      | Constraints                |
 |--------------|-----------|----------------------------|
-| id           | UUID      | PK, default uuid_generate_v4() |
-| name         | VARCHAR   | NOT NULL                   |
-| type         | VARCHAR   | NOT NULL, CHECK IN ('local') |
-| roots        | JSONB     | NOT NULL (array of paths)  |
-| is_active    | BOOLEAN   | DEFAULT true               |
-| created_at   | TIMESTAMP | DEFAULT NOW()              |
-| updated_at   | TIMESTAMP | DEFAULT NOW()              |
+| endpoint_id  | UUID      | PK, default gen_random_uuid() |
+| name         | TEXT      | NOT NULL                   |
+| type         | TEXT      | NOT NULL, CHECK IN ('local','smb','s3') |
+| config       | JSONB     | NOT NULL DEFAULT '{}'      |
+| status       | TEXT      | NOT NULL DEFAULT 'active'  |
+| created_at   | TIMESTAMPTZ | DEFAULT NOW()            |
 
-#### `scan_tasks`
+#### `tasks`
 | Column       | Type      | Constraints                |
 |--------------|-----------|----------------------------|
-| id           | UUID      | PK                         |
-| endpoint_id  | UUID      | FK -> endpoints.id         |
-| status       | VARCHAR   | CHECK IN ('pending', 'running', 'succeeded', 'failed') |
-| progress     | INTEGER   | DEFAULT 0 (0-100)          |
-| message      | TEXT      | NULL (current status msg)  |
-| error        | TEXT      | NULL (error details)       |
-| started_at   | TIMESTAMP | NULL                       |
-| completed_at | TIMESTAMP | NULL                       |
-| created_at   | TIMESTAMP | DEFAULT NOW()              |
+| task_id      | UUID      | PK                         |
+| type         | TEXT      | NOT NULL DEFAULT 'scan'    |
+| status       | TEXT      | CHECK IN ('pending', 'running', 'succeeded', 'failed') |
+| payload      | JSONB     | NOT NULL DEFAULT '{}'      |
+| progress     | REAL      | DEFAULT 0                  |
+| error        | TEXT      | NULL                       |
+| result       | JSONB     | DEFAULT '{}'                |
+| created_at   | TIMESTAMPTZ | DEFAULT NOW()            |
+| updated_at   | TIMESTAMPTZ | DEFAULT NOW()            |
 
 #### `datasets`
 | Column        | Type      | Constraints                |
 |---------------|-----------|----------------------------|
-| id            | UUID      | PK                         |
-| scan_task_id  | UUID      | FK -> scan_tasks.id        |
-| path          | TEXT      | NOT NULL                   |
-| name          | VARCHAR   | NOT NULL (folder name)     |
-| type          | VARCHAR   | CHECK IN ('raw', 'result', 'hybrid', 'unknown') |
+| dataset_id    | UUID      | PK                         |
+| dataset_type  | TEXT      | CHECK IN ('raw', 'result', 'hybrid') |
+| fingerprint   | TEXT      | NULL                       |
+| display_name  | TEXT      | NULL                       |
 | has_gcp       | BOOLEAN   | DEFAULT false              |
-| file_count    | INTEGER   | DEFAULT 0                  |
-| first_seen    | TIMESTAMP | DEFAULT NOW()              |
-| last_seen     | TIMESTAMP | DEFAULT NOW()              |
+| notes         | TEXT      | NULL                       |
+| first_seen    | TIMESTAMPTZ | DEFAULT NOW()            |
+| last_seen     | TIMESTAMPTZ | DEFAULT NOW()            |
+| status        | TEXT      | DEFAULT 'active'           |
+| meta          | JSONB     | DEFAULT '{}'               |
+
+#### `dataset_locations`
+| Column        | Type      | Constraints                |
+|---------------|-----------|----------------------------|
+| id            | UUID      | PK                         |
+| dataset_id    | UUID      | FK -> datasets.dataset_id  |
+| endpoint_id   | UUID      | FK -> endpoints.endpoint_id |
+| path          | TEXT      | NOT NULL                   |
+| is_primary    | BOOLEAN   | DEFAULT TRUE               |
+| bytes         | BIGINT    | NULL                       |
+| last_verified | TIMESTAMPTZ | DEFAULT NOW()            |
 
 ### Migration Approach
-- Use **Alembic** for migrations
-- Single initial migration `001_initial.py` creates all tables
-- On container start: `alembic upgrade head`
-- No auto-migrate in production; explicit migrations only
+- **v0.1**: Simple `init_db.sql` executed on API startup (no Alembic)
+- Future: Add Alembic for production migrations
 
 ---
 
@@ -190,83 +174,72 @@ Response 200: { "status": "ok", "version": "0.1.0" }
 
 ### Endpoints
 ```
-GET    /api/endpoints              # List all
-POST   /api/endpoints              # Create
-Request:  { "name": str, "type": "local", "roots": ["/data"] }
-Response: { "id": uuid, "name": str, "type": str, "roots": [...], "is_active": bool, ... }
-
-GET    /api/endpoints/{id}         # Get one
-DELETE /api/endpoints/{id}         # Delete (soft: set is_active=false)
+GET    /endpoints              # List all
+POST   /endpoints              # Create
+Request:  { "name": str, "type": "local", "config": {"roots": ["/data"]} }
+Response: { "endpoint_id": uuid, "name": str, "type": str, "config": {...}, "status": str, ... }
 ```
 
 ### Tasks
 ```
-GET    /api/tasks                  # List all (optional ?endpoint_id=...&status=...)
-POST   /api/tasks                  # Create & enqueue scan task
+POST   /tasks/scan             # Create & enqueue scan task
 Request:  { "endpoint_id": uuid }
-Response: { "id": uuid, "endpoint_id": uuid, "status": "pending", ... }
+Response: { "task_id": uuid, "endpoint_id": uuid, "status": "pending", "progress": 0, ... }
 
-GET    /api/tasks/{id}             # Get one (poll for status)
-Response: { "id": uuid, "status": str, "progress": int, "message": str, ... }
+GET    /tasks                  # List all
+GET    /tasks/{id}             # Get one (poll for status)
 ```
 
 ### Datasets
 ```
-GET    /api/datasets               # List all (optional ?scan_task_id=...&type=...)
-Response: [{ "id": uuid, "path": str, "name": str, "type": str, "has_gcp": bool, ... }]
+GET    /datasets               # List all (optional ?dataset_type=...&has_gcp=...)
+Response: [{ "dataset_id": uuid, "dataset_type": str, "display_name": str, "has_gcp": bool, ... }]
 
-GET    /api/datasets/{id}          # Get one
+GET    /datasets/{id}          # Get one (includes locations)
 ```
 
 ---
 
-## E) Worker Task Payload + Progress/Logging
+## E) Worker Task: Scan
 
-### RQ Task: `scan_endpoint`
+### Signature Rules
+- **Raw**: `metadata.yaml` AND `info/device_info.json` present
+- **Result**: `transforms.json` OR `undistort/` directory present
+- **Hybrid**: Both Raw + Result signatures present
+- **GCP**: `ctrl_points.csv` exists → set `has_gcp=true`
+
+### RQ Task: `scan.run_scan`
 ```python
-# Payload
+# Payload from task.payload
 {
-    "task_id": "uuid",
     "endpoint_id": "uuid",
-    "roots": ["/data", "/data/more"]
+    "roots": ["/data"],
+    "max_depth": 4,
+    "exclude_patterns": ["$RECYCLE.BIN", "@eaDir", ".Trash"]
 }
 
-# Progress updates via Redis key: task:{task_id}:progress
-{
-    "progress": 45,
-    "message": "Scanning /data/hybrid_dataset..."
-}
-
-# On completion:
-# - Insert datasets into DB
-# - Update task status to 'succeeded' or 'failed'
+# Progress updates via DB task.progress
+# On completion: upsert datasets + locations, update task.status
 ```
-
-### Logging Approach
-- Worker logs to stdout (Docker captures)
-- Structured JSON logs: `{"level": "INFO", "task_id": "...", "message": "..."}`
-- Progress stored in DB (`scan_tasks.progress`, `scan_tasks.message`) for UI polling
 
 ---
 
 ## F) Web Pages (Minimal UI)
 
 ### `/endpoints`
-- Table: Name | Type | Roots | Status | Actions
-- "Create Endpoint" button opens modal/form
-- Form: Name (text), Type (dropdown: local), Roots (comma-separated paths)
-- "Submit Scan" button per endpoint -> creates task, redirects to /tasks
+- Table: Name | Type | Roots | Status | Created
+- "Add Endpoint" button opens modal
+- Form: Name, Type (local), Root Paths (textarea, one per line)
 
 ### `/tasks`
-- Table: ID | Endpoint | Status | Progress | Created | Actions
-- Status badge color: pending(gray), running(blue), succeeded(green), failed(red)
-- Polling: Refresh every 2s if any task is 'running'
-- Click task row -> filter datasets by scan_task_id
+- Table: Task ID | Type | Status | Progress | Created
+- Status badge colors: pending(gray), running(blue), succeeded(green), failed(red)
+- Auto-refresh every 3s if any running task
 
 ### `/datasets`
-- Table: Name | Type | Path | Has GCP | First Seen
-- Filter by: type dropdown, scan_task dropdown
-- Type badge color: raw(blue), result(green), hybrid(purple), unknown(gray)
+- Table: Name | Type | GCP | First Seen | Last Seen
+- Filter by: dataset_type, has_gcp
+- Click row → show detail modal with locations
 
 ---
 
@@ -276,13 +249,13 @@ GET    /api/datasets/{id}          # Get one
 sample_data/
 ├── raw_dataset/                    # Type: raw
 │   ├── info/
-│   │   └── device_info.json       # {"device": "camera-001", ...}
-│   └── metadata.yaml              # "timestamp: 2024-01-01"
+│   │   └── device_info.json
+│   └── metadata.yaml
 │
 ├── result_dataset/                 # Type: result
-│   ├── transforms.json             # {"version": "1.0", ...}
+│   ├── transforms.json
 │   └── undistort/
-│       └── image_001.jpg
+│       └── .gitkeep
 │
 ├── hybrid_dataset/                 # Type: hybrid
 │   ├── info/
@@ -290,14 +263,11 @@ sample_data/
 │   ├── metadata.yaml
 │   └── transforms.json
 │
-├── with_gcp_dataset/               # Type: raw, has_gcp=true
-│   ├── info/
-│   │   └── device_info.json
-│   ├── metadata.yaml
-│   └── ctrl_points.csv            # GCP control points
-│
-└── unknown_folder/                 # Type: unknown (no signatures)
-    └── random_file.txt
+└── gcp_dataset/                    # Type: raw, has_gcp=true
+    ├── info/
+    │   └── device_info.json
+    ├── metadata.yaml
+    └── ctrl_points.csv
 ```
 
 ### Volume Mount in docker-compose.yml
@@ -315,7 +285,7 @@ services:
 
 ## H) Verification Commands
 
-### 1. Start Stack
+### 1. Start Stack (from C:\datama)
 ```bash
 docker compose up -d
 docker compose ps  # All 5 services should be "running"
@@ -329,39 +299,39 @@ curl http://localhost:8090/health
 
 ### 3. Create Endpoint
 ```bash
-curl -X POST http://localhost:8090/api/endpoints \
+curl -X POST http://localhost:8090/endpoints \
   -H "Content-Type: application/json" \
-  -d '{"name": "Local Test", "type": "local", "roots": ["/data"]}'
-# Expected: {"id": "...", "name": "Local Test", ...}
+  -d '{"name": "Local Test", "type": "local", "config": {"roots": ["/data"]}}'
+# Expected: {"endpoint_id": "...", "name": "Local Test", ...}
 ```
 
 ### 4. Submit Scan Task
 ```bash
-curl -X POST http://localhost:8090/api/tasks \
+curl -X POST http://localhost:8090/tasks/scan \
   -H "Content-Type: application/json" \
   -d '{"endpoint_id": "<ENDPOINT_ID>"}'
-# Expected: {"id": "...", "status": "pending", ...}
+# Expected: {"task_id": "...", "status": "pending", ...}
 ```
 
 ### 5. Poll Task Status
 ```bash
-curl http://localhost:8090/api/tasks/<TASK_ID>
+curl http://localhost:8090/tasks/<TASK_ID>
 # Wait until status = "succeeded"
 ```
 
 ### 6. List Datasets
 ```bash
-curl http://localhost:8090/api/datasets
-# Expected: Array with raw_dataset, result_dataset, hybrid_dataset, with_gcp_dataset, unknown_folder
+curl http://localhost:8090/datasets
+# Expected: 4 datasets with types: raw, result, hybrid, raw (gcp)
 ```
 
 ### 7. Web UI Verification
 1. Open http://localhost:3000
 2. Navigate to /endpoints
-3. Create endpoint (name="Test", type="local", roots="/data")
-4. Click "Submit Scan"
-5. Navigate to /tasks, watch progress
-6. Navigate to /datasets, verify 5 datasets listed with correct types
+3. Create endpoint (name="Test", roots="/data")
+4. Navigate to /tasks, submit scan
+5. Watch task progress, wait for succeeded
+6. Navigate to /datasets, verify 4 datasets listed
 
 ---
 
@@ -370,29 +340,26 @@ curl http://localhost:8090/api/datasets
 | Risk | Mitigation |
 |------|------------|
 | Docker networking issues | Use explicit service names, healthchecks |
-| DB migration race on first start | Add `depends_on` + healthcheck for postgres |
+| DB init race on first start | Add `depends_on` + healthcheck for postgres |
 | Worker fails silently | Set RQ failure handlers, log to stdout |
 | File permission denied | Mount volumes as `:ro`, document required permissions |
 | Large directory scan timeout | Add progress updates, reasonable timeouts |
-| Next.js SSR hydration mismatch | Use client-only rendering for lists |
-| Alembic version mismatch | Pin alembic version in requirements.txt |
 
 ### Rollback Plan
 1. `docker compose down -v` (removes containers + volumes)
 2. `git checkout .` (reverts any local changes)
 3. Re-run `docker compose up -d`
-4. If DB schema broken: `docker volume rm dms-handoff-public_postgres_data`
 
 ---
 
 ## J) Implementation Order
 
 1. **Docker infrastructure** (docker-compose.yml, Dockerfiles, .env)
-2. **Database** (models, Alembic migration)
-3. **API core** (main.py, config, health endpoint)
-4. **API routers** (endpoints, tasks, datasets)
-5. **Scanner service** (detection logic)
-6. **Worker** (RQ setup, task implementation)
+2. **Database** (init_db.sql)
+3. **API core** (main.py, database.py, health endpoint)
+4. **API routes** (endpoints, tasks, datasets)
+5. **Scanner logic** (worker/scan.py)
+6. **Worker** (worker.py, RQ setup)
 7. **Web UI** (Next.js skeleton, 3 pages)
 8. **Sample data** (create test datasets)
 9. **Verification** (run through acceptance criteria)
@@ -409,3 +376,12 @@ curl http://localhost:8090/api/datasets
 - [ ] Task transitions: pending -> running -> succeeded
 - [ ] Datasets list shows detected items with correct types
 - [ ] All file operations are read-only (no modifications)
+
+---
+
+## Publication Note
+
+After this plan is approved, publish to public repo:
+```powershell
+.\scripts\publish_handoff.ps1 -PublicRepoDir C:\dms-handoff-public -StepId "Step-002" -Message "plan"
+```
