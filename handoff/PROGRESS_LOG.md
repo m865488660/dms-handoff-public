@@ -79,6 +79,12 @@
 **Next**：
 - Step-001A：PlanGate 落地
 
+## [2026-03-04] HOTFIX: 修复 publish_handoff.ps1 try/finally 语法错误
+
+**Owner**：Claude Code
+**Done**：修复 try/finally 花括号配对，DryRun 可正常执行
+**Files Changed**：scripts/publish_handoff.ps1
+
 
 **Files Changed**：
 - scripts/publish_handoff.ps1（新增）

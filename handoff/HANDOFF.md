@@ -1,7 +1,7 @@
 # Handoff（当前状态）
 
 ## 当前可演示能力
-- ✅ ���键启动全栈：`docker compose up -d` (postgres, redis, api, worker, web)
+- ✅    键启动全栈：`docker compose up -d` (postgres, redis, api, worker, web)
 - ✅ API健康检查：`GET /health` 返回 `{"status":"ok","version":"0.1.0"}`
 - ✅ 端点管理：创建/列出本地存储端点
 - ✅ 扫描任务：提交扫描 → Worker检测数据集 → 结果存入DB
@@ -12,11 +12,12 @@
 - ✅ publish_handoff.ps1 已修复：不再因 git 输出误报失败；.claude/ 已加入 .gitignore  
 - ✅ publish_handoff.ps1 已兼容 PowerShell 7：不再将 git stderr 正常输出误报为错误
 - ✅ publish_handoff.ps1：git push 使用 Start-Process，避免 PowerShell 7 将 stderr 误报为错误
+- ✅ publish_handoff.ps1 语法已修复（try/finally 配对），脚本可正常运行
 
 ## 当前阻塞/风险
 - 无重大阻塞
 - SMB端点类型尚未实现（计划Step-003）
-- 尚未实现用��认证（计划后续迭代）
+- 尚未实现用  认证（计划后续迭代）
 
 ## 下一步（按优先级）
 1. Step-003：SMB扫描支持（远程网络共享）
