@@ -161,3 +161,84 @@ echo "docs/todo/2026-03-04-Step-001A-PlanGate-Plan.md" | grep -cE '^docs/todo/.*
 
 **Next**：
 - Step-003：SMB 扫描支持
+
+---
+
+## [2026-03-05] STEP-002：DMS 可运行骨架（Docker Compose 全栈）
+**Owner**：Antigravity
+**Goal（可验收）**：
+- A) `docker compose up -d` 一键启动 5 服务（postgres, redis, api, worker, web）
+- B) API 健康检查 `GET /health` 返回 200
+- C) 可创建端点、提交扫描任务、查看检测到的数据集
+- D) 数据集分类正确（raw / result / hybrid / gcp）
+- E) CI 门禁通过
+
+**Done**：
+- ✅ Docker Compose 配置（5 服务，健康检查，卷挂载）
+- ✅ PostgreSQL 数据库初始化（pgcrypto, 4 表 + 索引）
+- ✅ FastAPI 后端（/health, /endpoints, /tasks/scan, /datasets）
+- ✅ RQ Worker 扫描逻辑（签名规则分类，只读文件访问）
+- ✅ Next.js Web UI（3 页面：端点、任务、数据集）
+- ✅ 示例数据（sample_data/ 包含 4 种测试数据集）
+- ✅ 端到端验证：4 数据集正确检测
+
+**Files Changed**：
+- docker-compose.yml（新增）
+- .env.example（新增）
+- .dockerignore（新增）
+- api/Dockerfile, main.py, database.py, models.py, init_db.sql（新增）
+- api/routes/endpoints.py, tasks.py, datasets.py（新增）
+- worker/Dockerfile, worker.py, scan.py, requirements.txt（新增）
+- web/Dockerfile, package.json, next.config.js（新增）
+- web/app/layout.js, page.js, globals.css（新增）
+- web/app/endpoints/page.js, tasks/page.js, datasets/page.js（新增）
+- web/lib/api.js（新增）
+- sample_data/（4 个测试数据集目录）
+- configs/settings.yaml（新增）
+- README.md（更新）
+- docs/HANDOFF.md, docs/PROGRESS_LOG.md
+
+**Commands / Tests**：
+```bash
+# 启动全栈
+docker compose up -d --build
+docker compose ps  # 5 服务 running
+
+# API 健康检查
+curl http://localhost:8090/health
+# → {"status":"ok","version":"0.1.0"}
+
+# 创建端点 + 扫描
+curl -X POST http://localhost:8090/endpoints \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Local Test","type":"local","config":{"roots":["/data"]}}'
+
+curl -X POST http://localhost:8090/tasks/scan \
+  -H "Content-Type: application/json" \
+  -d '{"endpoint_id":"<ENDPOINT_ID>"}'
+
+# 等待完成，验证数据集
+curl http://localhost:8090/datasets
+# → 4 datasets: raw, result, hybrid, raw(gcp)
+```
+
+**Result（可演示点）**：
+- 一键启动：`docker compose up -d` 即可运行全栈
+- Web UI：http://localhost:3000 可视化管理
+- 扫描结果：4 种数据集类型正确识别
+- 只读扫描：无任何文件修改
+
+**As-built Notes**：
+- 数据库初始化使用 `/docker-entrypoint-initdb.d/` 挂载（非 Alembic）
+- UUID 使用 `gen_random_uuid()` 需要 pgcrypto 扩展
+- Web Dockerfile 需 `output: 'standalone'` 用于生产镜像
+- Worker 使用同步 psycopg2（非 asyncpg）
+
+**Known Issues / Risks**：
+- SMB 端点类型返回 501（待 Step-003）
+- 无认证/授权
+- 无分页（数据量大时性能问题）
+- 无 WebSocket 实时更新
+
+**Next**：
+- Step-003：SMB/CIFS 网络扫描支持

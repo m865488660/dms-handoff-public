@@ -1,8 +1,9 @@
 # STEP-002: Skeleton MVP Plan
 
 **Created:** 2026-03-04
-**Status:** Draft
+**Status:** Done
 **Author:** Claude
+**Completed:** 2026-03-05
 
 ---
 
@@ -377,14 +378,14 @@ curl http://localhost:8090/datasets
 
 ## Acceptance Criteria Checklist
 
-- [ ] `docker compose up -d` starts postgres, redis, api, worker, web
-- [ ] `GET /health` returns 200
-- [ ] Web UI loads at http://localhost:3000
-- [ ] Can create endpoint (type=local, roots=/data)
-- [ ] Can submit scan task
-- [ ] Task transitions: pending -> running -> succeeded
-- [ ] Datasets list shows detected items with correct types
-- [ ] All file operations are read-only (no modifications)
+- [x] `docker compose up -d` starts postgres, redis, api, worker, web
+- [x] `GET /health` returns 200
+- [x] Web UI loads at http://localhost:3000
+- [x] Can create endpoint (type=local, roots=/data)
+- [x] Can submit scan task
+- [x] Task transitions: pending -> running -> succeeded
+- [x] Datasets list shows detected items with correct types
+- [x] All file operations are read-only (no modifications)
 
 ---
 
@@ -394,3 +395,26 @@ After this plan is approved, publish to public repo:
 ```powershell
 .\scripts\publish_handoff.ps1 -PublicRepoDir C:\dms-handoff-public -StepId "Step-002" -Message "plan"
 ```
+
+---
+
+## As-built Notes（实施记录）
+
+**Completed:** 2026-03-05
+
+### 实际实现与计划的差异
+1. **DB 初始化方式**：计划写 `api/init_db.sql`，实际改为 `postgres/init_db.sql` 并挂载到 `/docker-entrypoint-initdb.d/`
+2. **Web Dockerfile**：需要 `rm -rf .next/cache` 清理缓存避免构建警告
+3. **Worker 依赖**：使用同步 `psycopg2` 而非 `asyncpg`（RQ 是同步框架）
+
+### 验证结果
+- ✅ 5 服务全部启动：postgres, redis, api, worker, web
+- ✅ API 健康检查通过
+- ✅ 4 种数据集正确分类：raw, result, hybrid, raw(gcp)
+- ✅ Web UI 正常运行
+- ✅ 只读扫描，无文件修改
+
+### 遗留问题
+- SMB 端点类型返回 501（计划 Step-003）
+- 无认证机制
+- 无分页/搜索功能
