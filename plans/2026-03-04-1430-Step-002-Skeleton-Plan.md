@@ -108,12 +108,17 @@ datama/                              # Private repo at C:\datama
 
 ## C) DB Schema (Simplified for v0.1)
 
-### Tables (via init_db.sql)
+### UUID Strategy
+- Use `gen_random_uuid()` from `pgcrypto` extension for all UUID primary keys
+- init_db.sql must include: `CREATE EXTENSION IF NOT EXISTS pgcrypto;`
+- All PK columns have `DEFAULT gen_random_uuid()`
+
+### Tables (via /docker-entrypoint-initdb.d/init_db.sql)
 
 #### `endpoints`
 | Column       | Type      | Constraints                |
 |--------------|-----------|----------------------------|
-| endpoint_id  | UUID      | PK, default gen_random_uuid() |
+| endpoint_id  | UUID      | PK, DEFAULT gen_random_uuid() |
 | name         | TEXT      | NOT NULL                   |
 | type         | TEXT      | NOT NULL, CHECK IN ('local','smb','s3') |
 | config       | JSONB     | NOT NULL DEFAULT '{}'      |
@@ -123,7 +128,8 @@ datama/                              # Private repo at C:\datama
 #### `tasks`
 | Column       | Type      | Constraints                |
 |--------------|-----------|----------------------------|
-| task_id      | UUID      | PK                         |
+| task_id      | UUID      | PK, DEFAULT gen_random_uuid() |
+| endpoint_id  | UUID      | NOT NULL, FK -> endpoints.endpoint_id |
 | type         | TEXT      | NOT NULL DEFAULT 'scan'    |
 | status       | TEXT      | CHECK IN ('pending', 'running', 'succeeded', 'failed') |
 | payload      | JSONB     | NOT NULL DEFAULT '{}'      |
@@ -136,8 +142,8 @@ datama/                              # Private repo at C:\datama
 #### `datasets`
 | Column        | Type      | Constraints                |
 |---------------|-----------|----------------------------|
-| dataset_id    | UUID      | PK                         |
-| dataset_type  | TEXT      | CHECK IN ('raw', 'result', 'hybrid') |
+| dataset_id    | UUID      | PK, DEFAULT gen_random_uuid() |
+| dataset_type  | TEXT      | CHECK IN ('raw', 'result', 'hybrid', 'unknown') |
 | fingerprint   | TEXT      | NULL                       |
 | display_name  | TEXT      | NULL                       |
 | has_gcp       | BOOLEAN   | DEFAULT false              |
@@ -150,7 +156,7 @@ datama/                              # Private repo at C:\datama
 #### `dataset_locations`
 | Column        | Type      | Constraints                |
 |---------------|-----------|----------------------------|
-| id            | UUID      | PK                         |
+| id            | UUID      | PK, DEFAULT gen_random_uuid() |
 | dataset_id    | UUID      | FK -> datasets.dataset_id  |
 | endpoint_id   | UUID      | FK -> endpoints.endpoint_id |
 | path          | TEXT      | NOT NULL                   |
@@ -159,7 +165,10 @@ datama/                              # Private repo at C:\datama
 | last_verified | TIMESTAMPTZ | DEFAULT NOW()            |
 
 ### Migration Approach
-- **v0.1**: Simple `init_db.sql` executed on API startup (no Alembic)
+- **v0.1**: Use Postgres initdb via `/docker-entrypoint-initdb.d/init_db.sql`
+  - Mount `postgres/init_db.sql` to `/docker-entrypoint-initdb.d/` in docker-compose.yml
+  - Executed automatically on first container start
+  - Idempotent: use `IF NOT EXISTS` for all objects
 - Future: Add Alembic for production migrations
 
 ---
