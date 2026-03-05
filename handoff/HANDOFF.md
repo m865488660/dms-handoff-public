@@ -48,4 +48,9 @@ docker compose down
 ```powershell
 # 发布到公共仓库
 .\scripts\publish_handoff.ps1 -PublicRepoDir C:\dms-handoff-public -StepId "Step-XXX" -Message "done"
+
+# 带 DryRun 的完整发布（推荐）
+.\scripts\publish_handoff.ps1 -StepId "Step-XXX" -Message "done" -WithDryRun
 ```
+
+> **Automation**: 最新发布回执自动镜像到 `handoff/receipts/LATEST.md`，GPT 可直接读取。
