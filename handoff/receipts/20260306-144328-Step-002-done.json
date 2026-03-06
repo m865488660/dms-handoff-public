@@ -1,0 +1,25 @@
+﻿{
+    "timestamp":  "2026-03-06T14:43:28Z",
+    "published_files":  [
+                            "docs\\HANDOFF.md -\u003e handoff\\HANDOFF.md",
+                            "docs\\PROGRESS_LOG.md -\u003e handoff\\PROGRESS_LOG.md",
+                            "2026-03-04-1430-Step-002-Skeleton-Plan.md -\u003e plans\\2026-03-04-1430-Step-002-Skeleton-Plan.md"
+                        ],
+    "public":  {
+                   "commit_sha_before":  "0956afb",
+                   "repo":  "C:\\dms-handoff-public",
+                   "commit_sha_after":  "52460eb"
+               },
+    "source":  {
+                   "commit_sha":  "0d599b6",
+                   "repo":  "C:\\datama",
+                   "commit_message":  "0d599b6 docs(HANDOFF): update receipt path reference to LATEST.json"
+               },
+    "status":  "FAIL",
+    "guards":  {
+                   "no_public_docs_todo":  false,
+                   "no_secrets_detected":  true
+               },
+    "message":  "done",
+    "step_id":  "Step-002"
+}
