@@ -13,11 +13,14 @@
 
 ## 当前阻塞/风险
 - 无重大阻塞
-- SMB端点类型尚未实现（计划Step-003）
-- 尚未实现用  认证（计划后续迭代）
+
+## 当前阶段（PlanGate）
+- **Step-003**：SMB/CIFS网络扫描支持 — **PLAN/REVIEW** 阶段
+  - 方案文档：`docs/todo/2026-03-06-1500-Step-003-SMB-Scan-Plan.md`
+  - 等待审批后进入 Execute 阶段
 
 ## 下一步（按优先级）
-1. Step-003：SMB扫描支持（远程网络共享）
+1. Step-003：SMB扫描支持 — 执行阶段（待审批）
 2. Step-004：元数据解析（metadata.yaml、device_info.json解析入库）
 3. Step-005：数据集去重（基于fingerprint跨端点合并）
 

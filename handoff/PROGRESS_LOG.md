@@ -242,3 +242,37 @@ curl http://localhost:8090/datasets
 
 **Next**：
 - Step-003：SMB/CIFS 网络扫描支持
+
+---
+
+## [2026-03-06] STEP-003 PlanGate：SMB/CIFS 网络扫描支持 — PLAN 阶段
+**Owner**：Antigravity
+**Status**：PLAN / REVIEW
+**Goal（可验收）**：
+- A) SMB端点类型激活（API不再返回501）
+- B) Worker使用Python SMB库直接扫描，无需OS挂载
+- C) 凭证安全存储（DB JSONB），不泄露到日志/公开文档
+- D) Dockerized Samba集成测试
+
+**Plan Document**：`docs/todo/2026-03-06-1500-Step-003-SMB-Scan-Plan.md`
+
+**Key Design Decisions**：
+- SMB库：`smbprotocol`（SMB2/SMB3，纯Python）
+- 凭证存储：DB JSONB + 环境变量fallback
+- 集成测试：Dockerized Samba容器复用sample_data/
+- 分类规则：保持raw/result/hybrid + has_gcp
+
+**Files Changed (Plan only)**：
+- docs/todo/2026-03-06-1500-Step-003-SMB-Scan-Plan.md（新增）
+- docs/HANDOFF.md（更新当前阶段）
+- docs/PROGRESS_LOG.md（本条目）
+
+**Pending Execution Tasks**：
+- [ ] Phase 1: Database & Models（credentials列，SMB配置模型）
+- [ ] Phase 2: API Routes（移除501，credentials端点）
+- [ ] Phase 3: Worker Walker Abstraction（LocalWalker/SMBWalker）
+- [ ] Phase 4: Integration Testing（docker-compose.test.yml）
+- [ ] Phase 5: Documentation & Publish
+
+**Next**：
+- Step-003 Execute 阶段（待审批后执行）
