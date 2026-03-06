@@ -53,4 +53,4 @@ docker compose down
 .\scripts\publish_handoff.ps1 -StepId "Step-XXX" -Message "done" -WithDryRun
 ```
 
-> **Automation**: 最新发布回执自动镜像到 `handoff/receipts/LATEST.md`，GPT 可直接读取。
+> **Automation**: 最新发布回执自动镜像到 `handoff/receipts/LATEST.json`，GPT 可直接读取。
