@@ -3,7 +3,9 @@
 ## 当前可演示能力
 - ✅ 一键启动全栈：`docker compose up -d` (postgres, redis, api, worker, web)
 - ✅ API健康检查：`GET /health` 返回 `{"status":"ok","version":"0.1.0"}`
-- ✅ 端点管理：创建/列出本地存储端点
+- ✅ 端点管理：创建/列出本地存储端点 + **SMB/CIFS网络端点**
+- ✅ **SMB扫描支持**：Worker使用Python smbprotocol库直接扫描，无需OS挂载
+- ✅ **凭证安全存储**：DB JSONB存储，API返回`has_credentials`布尔值，绝不暴露凭证
 - ✅ 扫描任务：提交扫描 → Worker检测数据集 → 结果存入DB
 - ✅ 数据集分类：raw / result / hybrid / has_gcp 四种类型识别
 - ✅ Web UI：端点管理、任务大厅、数据集列表（含筛选）
@@ -15,14 +17,14 @@
 - 无重大阻塞
 
 ## 当前阶段（PlanGate）
-- **Step-003**：SMB/CIFS网络扫描支持 — **PLAN/REVIEW** 阶段
+- **Step-003**：SMB/CIFS网络扫描支持 — **EXECUTE/DONE** 阶段
   - 方案文档：`docs/todo/2026-03-06-1500-Step-003-SMB-Scan-Plan.md`
-  - 等待审批后进入 Execute 阶段
+  - 已完成实施，验证通过
 
 ## 下一步（按优先级）
-1. Step-003：SMB扫描支持 — 执行阶段（待审批）
-2. Step-004：元数据解析（metadata.yaml、device_info.json解析入库）
-3. Step-005：数据集去重（基于fingerprint跨端点合并）
+1. Step-004：元数据解析（metadata.yaml、device_info.json解析入库）
+2. Step-005：数据集去重（基于fingerprint跨端点合并）
+3. Step-006：S3 endpoint支持（如需要）
 
 ## 最新启动方式（会随迭代更新）
 ```bash
@@ -39,6 +41,18 @@ open http://localhost:3000
 docker compose down
 ```
 
+### SMB集成测试
+```bash
+# 启动SMB测试容器
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d smb-test
+
+# 等待SMB容器就绪
+docker compose -f docker-compose.test.yml logs -f smb-test
+
+# 运行集成测试
+python tests/test_smb_integration.py
+```
+
 ### 端口映射
 | 服务 | 端口 | 说明 |
 |------|------|------|
@@ -46,6 +60,7 @@ docker compose down
 | Web | 3000 | Next.js前端 |
 | Postgres | 5432 | 数据库 |
 | Redis | 6379 | 消息队列 |
+| SMB Test | 14445 | 集成测试Samba容器 |
 
 ### 公共仓库发布
 ```powershell

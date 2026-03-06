@@ -276,3 +276,111 @@ curl http://localhost:8090/datasets
 
 **Next**：
 - Step-003 Execute 阶段（待审批后执行）
+
+---
+
+## [2026-03-06] STEP-003 Execute：SMB/CIFS 网络扫描支持 — EXECUTE 阶段
+**Owner**：Antigravity
+**Status**：EXECUTE / DONE
+**Goal（可验收）**：
+- A) SMB端点类型激活（API不再返回501）
+- B) Worker使用Python SMB库直接扫描，无需OS挂载
+- C) 凭证安全存储（DB JSONB），不泄露到日志/公开文档
+- D) Dockerized Samba集成测试
+
+**Done**：
+- ✅ Phase 1: Database schema - 添加 `credentials` JSONB 列到 endpoints 表
+- ✅ Phase 1: API models - 添加 `SMBEndpointConfig`, `SMBCredentials`, `CredentialsSet` 模型
+- ✅ Phase 1: API models - 添加 `has_credentials` 计算字段到 `EndpointOut`
+- ✅ Phase 2: 移除 501 block for SMB type in `create_endpoint`
+- ✅ Phase 2: 添加 `POST /endpoints/{id}/credentials` 端点
+- ✅ Phase 2: 添加 `DELETE /endpoints/{id}/credentials` 端点
+- ✅ Phase 2: 更新 `GET /endpoints` 返回 `has_credentials` 布尔值
+- ✅ Phase 2: 任务payload包含 `endpoint_type`，但不包含凭证
+- ✅ Phase 3: 创建 `worker/walker/` 模块
+  - `base.py`: `WalkerBase` 抽象类, `FileInfo` 数据类
+  - `local.py`: `LocalWalker` 实现
+  - `smb.py`: `SMBWalker` 实现（使用 smbprotocol 库）
+- ✅ Phase 3: 重构 `worker/scan.py` 使用 walker 抽象
+- ✅ Phase 3: Worker 从 DB 直接获取凭证（不通过任务队列）
+- ✅ Phase 3: 添加 `smbprotocol==1.12.0` 到 worker requirements.txt
+- ✅ Phase 4: 创建 `docker-compose.test.yml` with Samba container (port 14445)
+- ✅ Phase 4: 创建 `tests/test_smb_integration.py` 集成测试脚本
+- ✅ Phase 5: 更新 `docs/HANDOFF.md` 和 `docs/PROGRESS_LOG.md`
+
+**Files Changed**：
+- api/init_db.sql（添加 credentials 列）
+- api/models.py（添加 SMB 配置和凭证模型）
+- api/routes/endpoints.py（移除 501 block，添加凭证端点）
+- api/routes/tasks.py（添加 endpoint_type 到 payload）
+- worker/requirements.txt（添加 smbprotocol）
+- worker/walker/__init__.py（新增）
+- worker/walker/base.py（新增）
+- worker/walker/local.py（新增）
+- worker/walker/smb.py（新增）
+- worker/scan.py（重构使用 walker 抽象）
+- docker-compose.test.yml（新增）
+- tests/test_smb_integration.py（新增）
+- docs/HANDOFF.md
+- docs/PROGRESS_LOG.md
+
+**Commands / Tests**：
+```bash
+# 启动主栈
+docker compose up -d --build
+
+# 启动 SMB 测试容器
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d smb-test
+
+# 等待 SMB 就绪
+sleep 10
+
+# 创建 SMB 端点
+curl -X POST http://localhost:8090/endpoints \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "SMB Test",
+    "type": "smb",
+    "config": {
+      "host": "host.docker.internal",
+      "share": "datasets",
+      "roots": ["/"],
+      "max_depth": 4,
+      "port": 14445
+    }
+  }'
+
+# 设置凭证
+curl -X POST http://localhost:8090/endpoints/{endpoint_id}/credentials \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "testpass"}'
+
+# 提交扫描任务
+curl -X POST http://localhost:8090/tasks/scan \
+  -H "Content-Type: application/json" \
+  -d '{"endpoint_id": "{endpoint_id}"}'
+
+# 验证数据集发现
+curl http://localhost:8090/datasets
+```
+
+**Result（可演示点）**：
+- `POST /endpoints` with `type=smb` 返回 201（不再是 501）
+- `POST /endpoints/{id}/credentials` 存储凭证，`GET /endpoints` 返回 `has_credentials: true`
+- Worker 使用 smbprotocol 直接扫描 SMB 共享，无需 OS 挂载
+- 凭证从不出现在日志、任务 payload、API 响应中
+- Dockerized Samba 集成测试容器可用
+
+**Security Verification**：
+- ✅ 无凭证在日志中出现
+- ✅ API 响应不返回凭证字段
+- ✅ 任务 payload 不包含凭证
+- ✅ 凭证仅存储在 DB JSONB 列，由 DB 访问控制保护
+
+**Known Issues / Risks**：
+- SMB 连接超时需要合理配置
+- 大型 SMB 共享扫描性能待优化
+- 当前不支持 Kerberos/AD 认证
+
+**Next**：
+- Step-004：元数据解析（metadata.yaml、device_info.json解析入库）
