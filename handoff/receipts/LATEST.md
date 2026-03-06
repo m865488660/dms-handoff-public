@@ -1,8 +1,8 @@
 ﻿# Publish Receipt
 
 ## Metadata
-- Timestamp (local): 2026-03-06 17:01:14
-- Timestamp (UTC): 2026-03-06T09:01:14Z
+- Timestamp (local): 2026-03-06 17:01:20
+- Timestamp (UTC): 2026-03-06T09:01:20Z
 - StepId: Step-002
 - Message: plan
 - Selected plan: 2026-03-04-1430-Step-002-Skeleton-Plan.md
@@ -22,7 +22,7 @@
 - Repo: C:\dms-handoff-public
 - Before SHA: 0f46532
 - Content commit SHA: 9c9c493
-- Metadata commit SHA: 
+- Metadata commit SHA: f7d1e15
 
 ## Files Published
 - docs/HANDOFF.md -> handoff/HANDOFF.md
@@ -54,4 +54,6 @@ Files to publish:
   docs/todo/2026-03-04-1430-Step-002-Skeleton-Plan.md -> plans/archive/Step-002/2026-03-04-1430-Step-002-Skeleton-Plan.md
 git commit -m \
 git push
+git commit -m \
+git push (metadata)
 ```
