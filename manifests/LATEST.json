@@ -1,0 +1,50 @@
+﻿{
+    "schema_version":  "1.1",
+    "timestamp_utc":  "2026-03-06T09:01:14Z",
+    "step_id":  "Step-002",
+    "message":  "plan",
+    "plan_file":  "2026-03-04-1430-Step-002-Skeleton-Plan.md",
+    "snapshot_root":  "archive/Step-002",
+    "published_commit_sha":  "9c9c493",
+    "source":  {
+                   "repo":  "C:\\datama",
+                   "commit_sha":  "091ac77",
+                   "commit_message":  "091ac77 feat(step-003): Add SMB/CIFS network scan support"
+               },
+    "public":  {
+                   "repo":  "C:\\dms-handoff-public",
+                   "content_commit_sha":  "9c9c493"
+               },
+    "files":  [
+                  {
+                      "path":  "handoff/HANDOFF.md",
+                      "sha256":  "24A33199B361F49C06D41AC0A0389B95691023201ACC45E5983ACFBFD5E8C89B",
+                      "bytes":  2690
+                  },
+                  {
+                      "path":  "handoff/PROGRESS_LOG.md",
+                      "sha256":  "DC9E115794527B8D8A95284B884ACBAEC82F402D54F9928434C69E4681EB3747",
+                      "bytes":  14177
+                  },
+                  {
+                      "path":  "plans/2026-03-04-1430-Step-002-Skeleton-Plan.md",
+                      "sha256":  "2061325748133546FB836459CA39E07354B7363E3AE928404B56269AB824FD66",
+                      "bytes":  13830
+                  },
+                  {
+                      "path":  "handoff/archive/Step-002/HANDOFF.md",
+                      "sha256":  "24A33199B361F49C06D41AC0A0389B95691023201ACC45E5983ACFBFD5E8C89B",
+                      "bytes":  2690
+                  },
+                  {
+                      "path":  "handoff/archive/Step-002/PROGRESS_LOG.md",
+                      "sha256":  "DC9E115794527B8D8A95284B884ACBAEC82F402D54F9928434C69E4681EB3747",
+                      "bytes":  14177
+                  },
+                  {
+                      "path":  "plans/archive/Step-002/2026-03-04-1430-Step-002-Skeleton-Plan.md",
+                      "sha256":  "2061325748133546FB836459CA39E07354B7363E3AE928404B56269AB824FD66",
+                      "bytes":  13830
+                  }
+              ]
+}
