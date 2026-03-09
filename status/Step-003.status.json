@@ -1,0 +1,14 @@
+﻿{
+    "schema_version":  "1.0",
+    "step_id":  "Step-003",
+    "title":  "SMB/CIFS Network Scan Support",
+    "phase":  "DONE",
+    "plan_ref":  "plans/2026-03-06-1500-Step-003-SMB-Scan-Plan.md",
+    "snapshot_root":  "archive/Step-003",
+    "manifest_ref":  "manifests/LATEST.json",
+    "latest_receipt_ref":  "handoff/receipts/LATEST.json",
+    "scope_review_ref":  "reviews/Step-003.plan.review.json",
+    "code_review_ref":  "reviews/Step-003.pr.review.json",
+    "updated_at_utc":  "2026-03-09T03:21:41Z",
+    "source_public_commit":  "a93809b"
+}
