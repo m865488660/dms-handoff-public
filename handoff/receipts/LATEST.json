@@ -1,6 +1,6 @@
 ﻿{
-    "timestamp_local":  "2026-03-09 11:21:41",
-    "timestamp_utc":  "2026-03-09T03:21:41Z",
+    "timestamp_local":  "2026-03-09 11:21:47",
+    "timestamp_utc":  "2026-03-09T03:21:47Z",
     "step_id":  "Step-003",
     "message":  "done",
     "selected_plan":  "2026-03-06-1500-Step-003-SMB-Scan-Plan.md",
@@ -14,7 +14,7 @@
                    "repo":  "C:\\dms-handoff-public",
                    "commit_sha_before":  "b6b05b9",
                    "content_commit_sha":  "a93809b",
-                   "metadata_commit_sha":  ""
+                   "metadata_commit_sha":  "a9d0b4d"
                },
     "published_files":  [
                             "docs/HANDOFF.md -\u003e handoff/HANDOFF.md",

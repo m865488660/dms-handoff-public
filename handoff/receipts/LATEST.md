@@ -1,8 +1,8 @@
 ﻿# Publish Receipt
 
 ## Metadata
-- Timestamp (local): 2026-03-09 11:21:41
-- Timestamp (UTC): 2026-03-09T03:21:41Z
+- Timestamp (local): 2026-03-09 11:21:47
+- Timestamp (UTC): 2026-03-09T03:21:47Z
 - StepId: Step-003
 - Message: done
 - Selected plan: 2026-03-06-1500-Step-003-SMB-Scan-Plan.md
@@ -22,7 +22,7 @@
 - Repo: C:\dms-handoff-public
 - Before SHA: b6b05b9
 - Content commit SHA: a93809b
-- Metadata commit SHA: 
+- Metadata commit SHA: a9d0b4d
 
 ## Files Published
 - docs/HANDOFF.md -> handoff/HANDOFF.md
@@ -71,4 +71,6 @@ Files to publish:
 git commit -m "done: Step-003"
 git push
 [STATUS] Generated status files with commit SHA: a93809b
+git commit -m "metadata: done (Step-003)"
+git push (metadata)
 ```
